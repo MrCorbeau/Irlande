@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tour d'Irlande</title>
+<meta name="theme-color" content="#24422F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{
+    --ink:#21261F;
+    --paper:#EDEFE3;
+    --card:#F7F8F0;
+    --forest:#24422F;
+    --moss:#4C6B4F;
+    --rust:#9C3D1C;
+    --stone:#8B8C7C;
+    --line:#D8DAC9;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Noto Serif', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--paper);
+    display:flex;
+    flex-direction:column;
+    flex-wrap:wrap;
+    position:relative;
+  }
+  .topbar{
+    padding:22px 20px 16px;
+    background:var(--forest);
+    color:var(--paper);
+    border-radius:0 0 22px 22px;
+  }
+  .topbar .kicker{
+    font-size:13px;
+    color:#B9C7B4;
+    margin:0 0 2px;
+  }
+  .topbar h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:26px;
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  .topbar .dates{
+    margin-top:6px;
+    font-size:14px;
+    color:#DCE4D6;
+  }
+  .content{
+    flex:1;
+    padding:18px 18px 100px;
+    overflow-y:auto;
+  }
+  section{display:none;}
+  section.active{display:block;}
+
+  /* --- Overview --- */
+  .countdown{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:22px 20px;
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .countdown .num{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:52px;
+    color:var(--forest);
+    line-height:1;
+  }
+  .countdown .label{
+    font-size:14px;
+    color:var(--stone);
+    margin-top:6px;
+  }
+  h2.section-title{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:19px;
+    margin:0 0 12px;
+    color:var(--forest);
+  }
+  .route{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 18px 4px;
+    margin-bottom:20px;
+  }
+  .today-card{
+    background:var(--forest);
+    color:var(--paper);
+    border-radius:18px;
+    padding:18px 20px;
+    margin-bottom:20px;
+  }
+  .today-head{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    margin-bottom:8px;
+  }
+  .today-day{
+    font-size:12.5px;
+    color:#B9C7B4;
+  }
+  .today-place{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:20px;
+  }
+  .today-note{
+    white-space:pre-line;
+    font-size:13.5px;
+    line-height:1.55;
+    color:#DCE4D6;
+    border-top:1px solid rgba(255,255,255,0.18);
+    padding-top:10px;
+  }
+  .route-stop{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding-bottom:16px;
+    position:relative;
+  }
+  .route-stop .dot{
+    width:10px;height:10px;
+    border-radius:50%;
+    background:var(--moss);
+    margin-top:5px;
+    flex-shrink:0;
+    z-index:1;
+  }
+  .route-stop:not(:last-child)::before{
+    content:'';
+    position:absolute;
+    left:4px;
+    top:14px;
+    bottom:-2px;
+    width:2px;
+    background:var(--line);
+  }
+  .route-stop .place{
+    font-weight:600;
+    font-size:15px;
+  }
+  .info-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px 18px;
+    margin-bottom:14px;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .info-card b{color:var(--forest);}
+
+  /* --- Itinerary --- */
+  .day-card{
+    background:var(--card);
+    border-left:4px solid var(--moss);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:12px;
+  }
+  .day-card .day-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:6px;
+  }
+  .day-card .day-num{
+    font-family:var(--font-display);
+    font-weight:600;
+    color:var(--forest);
+    font-size:15px;
+  }
+  .day-card .day-date{
+    font-size:12.5px;
+    color:var(--stone);
+  }
+  .day-card input.place-input{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:16px;
+    border:none;
+    background:transparent;
+    width:100%;
+    color:var(--ink);
+    padding:2px 0;
+  }
+  .day-card textarea.note-input{
+    width:100%;
+    border:none;
+    background:transparent;
+    font-family:var(--font-body);
+    font-size:13.5px;
+    color:#4A4E45;
+    resize:vertical;
+    padding:2px 0;
+    min-height:90px;
+    line-height:1.5;
+  }
+  .day-card input.place-input:focus, .day-card textarea.note-input:focus{outline:none;}
+  .del-day{
+    background:none;border:none;color:var(--stone);font-size:12.5px;
+    cursor:pointer;padding:2px 0;
+  }
+  .add-btn{
+    width:100%;
+    padding:13px;
+    border-radius:12px;
+    border:1.5px dashed var(--stone);
+    background:transparent;
+    color:var(--moss);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+
+  /* --- Checklist --- */
+  .cat-block{margin-bottom:18px;}
+  .cat-title{
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--stone);
+    margin-bottom:8px;
+    text-transform:none;
+  }
+  .item-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .item-row input[type=checkbox]{
+    width:19px;height:19px;
+    accent-color:var(--moss);
+    flex-shrink:0;
+  }
+  .item-row span{
+    flex:1;
+    font-size:14.5px;
+  }
+  .item-row.checked span{
+    color:var(--stone);
+    text-decoration:line-through;
+  }
+  .item-row button{
+    background:none;border:none;color:var(--stone);font-size:16px;cursor:pointer;
+  }
+  .add-row{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .add-row input{
+    flex:1;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-family:var(--font-body);
+    font-size:14px;
+  }
+  .add-row button{
+    padding:10px 16px;
+    border-radius:10px;
+    border:none;
+    background:var(--forest);
+    color:var(--paper);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  /* --- Budget --- */
+  .budget-total{
+    background:var(--forest);
+    color:var(--paper);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:18px;
+  }
+  .budget-total .amount{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:34px;
+  }
+  .budget-total .sub{
+    font-size:13px;
+    color:#C9D4C3;
+    margin-top:4px;
+  }
+  .expense-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--card);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:8px;
+  }
+  .expense-row .left{display:flex;flex-direction:column;}
+  .expense-row .cat{
+    font-size:11.5px;
+    color:var(--rust);
+    font-weight:600;
+  }
+  .expense-row .desc{font-size:14.5px;margin-top:2px;}
+  .expense-row .amt{font-weight:600;font-size:15px;}
+  .expense-row button{
+    background:none;border:none;color:var(--stone);font-size:15px;cursor:pointer;margin-left:10px;
+  }
+  .budget-form{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:18px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .budget-form select, .budget-form input{
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    font-family:var(--font-body);
+    font-size:14px;
+    background:#fff;
+  }
+  .budget-form button{
+    padding:11px;
+    border-radius:10px;
+    border:none;
+    background:var(--rust);
+    color:#fff;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  /* --- Nav --- */
+  .navbar{
+    position:sticky;
+    bottom:0;
+    left:0; right:0;
+    max-width:430px;
+    margin:0 auto;
+    background:var(--card);
+    border-top:1px solid var(--line);
+    display:flex;
+    gap:6px;
+    padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+  }
+  .navbtn{
+    flex:1;
+    background:none;
+    border:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    padding:6px 0;
+    color:var(--stone);
+    cursor:pointer;
+    font-family:var(--font-body);
+    font-size:11.5px;
+    font-weight:500;
+  }
+  .navbtn.active{color:var(--forest);}
+  .navbtn svg{width:22px;height:22px;}
+  .empty{
+    text-align:center;
+    color:var(--stone);
+    font-size:13.5px;
+    padding:20px 0;
+  }
+
+  /* --- Écran étroit (ex. écran de couverture d'un pliable) --- */
+  @media (max-width:359px){
+    .topbar{ padding:18px 16px 14px; }
+    .topbar h1{ font-size:23px; }
+    .content{ padding:14px 14px 100px; }
+    .countdown .num{ font-size:44px; }
+  }
+
+  /* --- Écran large (ex. écran intérieur déplié d'un pliable, tablette) --- */
+  @media (min-width:700px){
+    .app{
+      max-width:1040px;
+      flex-direction:row;
+    }
+    .topbar{
+      width:100%;
+      order:1;
+      border-radius:0 0 26px 26px;
+    }
+    .navbar{
+      order:2;
+      position:sticky;
+      top:0;
+      max-width:none;
+      width:108px;
+      flex-direction:column;
+      align-self:stretch;
+      border-top:none;
+      border-right:1px solid var(--line);
+      padding:24px 8px calc(8px + env(safe-area-inset-bottom));
+      gap:10px;
+    }
+    .navbtn{ padding:10px 0; }
+    .content{
+      order:3;
+      flex:1;
+      min-width:0;
+      max-width:920px;
+      margin:0 auto;
+      padding:30px 34px 40px;
+    }
+    #tab-apercu{ max-width:640px; margin:0 auto; }
+    #dayList{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .day-card{ margin-bottom:0; }
+    #checklistArea{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:22px;
+    }
+    .budget-total, .budget-form{ max-width:640px; margin:0 auto 18px; }
+    #expenseList{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      max-width:920px;
+      margin:0 auto;
+    }
+    .expense-row{ margin-bottom:0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <p class="kicker">Route d'Irlande</p>
+    <h1>Sarah &amp; toi</h1>
+    <p class="dates" id="topbarDates">2 – 11 septembre</p>
+  </div>
+
+  <div class="content">
+
+    <section id="tab-apercu" class="active">
+      <div class="countdown">
+        <div class="num" id="countdownNum">–</div>
+        <div class="label" id="countdownLabel">jours avant le départ</div>
+      </div>
+
+      <div id="todaySummary"></div>
+
+      <h2 class="section-title">La route</h2>
+      <div class="route" id="routeList"></div>
+
+      <h2 class="section-title">Pratique</h2>
+      <div class="info-card"><b>Vols :</b> TS730 YUL→YYZ, TS230 YYZ→DUB (2-3 sept) · TS231 DUB→YYZ, TS551 YYZ→YUL (11 sept) — conf. N5LH81</div>
+      <div class="info-card"><b>Voiture :</b> Toyota Corolla Hybrid, Europcar — conf. 1200327846</div>
+      <div class="info-card"><b>À vérifier :</b> un item Airbnb du 4 sept pointe vers Bangalore (erreur TripIt) et le 10 sept n'a aucune activité listée après le départ de Newtownards — probablement une journée de route.</div>
+    </section>
+
+    <section id="tab-itineraire">
+      <h2 class="section-title">Itinéraire jour par jour</h2>
+      <div id="dayList"></div>
+      <button class="add-btn" id="addDayBtn">+ Ajouter une étape</button>
+    </section>
+
+    <section id="tab-checklist">
+      <h2 class="section-title">Préparatifs</h2>
+      <div id="checklistArea"></div>
+    </section>
+
+    <section id="tab-budget">
+      <h2 class="section-title">Budget du voyage</h2>
+      <div class="budget-total">
+        <div class="amount" id="budgetTotal">0 $</div>
+        <div class="sub" id="budgetCount">Aucune dépense pour l'instant</div>
+      </div>
+      <div class="budget-form">
+        <select id="expCat">
+          <option>Hébergement</option>
+          <option>Transport</option>
+          <option>Nourriture</option>
+          <option>Activités</option>
+          <option>Autre</option>
+        </select>
+        <input type="text" id="expDesc" placeholder="Description (ex : nuit à Kilkenny)">
+        <input type="number" id="expAmt" placeholder="Montant (€)" inputmode="decimal">
+        <button id="addExpBtn">Ajouter la dépense</button>
+      </div>
+      <div id="expenseList"></div>
+    </section>
+
+  </div>
+
+  <div class="navbar">
+    <button class="navbtn active" data-tab="apercu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      Aperçu
+    </button>
+    <button class="navbtn" data-tab="itineraire">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 20l-5-2V6l5 2 6-2 5 2v12l-5-2-6 2z"/><path d="M9 6v14"/><path d="M15 8v14"/></svg>
+      Itinéraire
+    </button>
+    <button class="navbtn" data-tab="checklist">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h10"/><circle cx="19" cy="19" r="2.5"/></svg>
+      Checklist
+    </button>
+    <button class="navbtn" data-tab="budget">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M9.5 9.5a2.5 2.5 0 0 1 2.5-1.5c1.5 0 2.5.8 2.5 2s-1 1.7-2.5 1.7-2.5.7-2.5 2 1 2 2.5 2a2.5 2.5 0 0 0 2.5-1.5"/></svg>
+      Budget
+    </button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'trip-data-v2';
+
+let state = {
+  itinerary: null,
+  checklist: null,
+  budget: []
+};
+
+function defaultItinerary(){
+  const raw = [
+    ["2026-09-02","Départ – vol vers Dublin","20h35 vol TS730 YUL→YYZ (arr. 22h00)\n23h55 vol TS230 YYZ→DUB (arr. 3 sept 11h30, conf. N5LH81)"],
+    ["2026-09-03","Dublin","11h45 prise en charge voiture (Europcar, Corolla Hybrid, conf. 1200327846)\nAirbnb Dublin 3 – 125A Malahide Road, arrivée 14h00 (conf. HMDZNQRH5Y)\n14h30 Trinity College – Book of Kells\n17h00 Cathédrale St-Patrick\n19h00 Temple Bar"],
+    ["2026-09-04","Howth","8h00 Randonnée Howth Cliff, Summit Car Park\n14h00 Guinness Storehouse\n⚠️ item Airbnb 12h30 erroné (adresse Bangalore) — à vérifier/supprimer sur TripIt"],
+    ["2026-09-05","Wicklow Mountains → Thurles","8h00 Ballinastoe Wood, Lough Dan & Lough Tay\n12h00 Tonelagee, Wicklow Mountains\nAirbnb Thurles (Ballybeg, Littleton), arrivée 14h00 (conf. HM4ZJNPKPD) – boîte à clés code 0000"],
+    ["2026-09-06","Kilkenny → Cashel → Waterford → Cork","8h00 Château de Kilkenny\n10h00 Rock of Cashel\n11h00 Tour de Ballysaggartmore, Co. Waterford\n13h00 Maisons « Deck of Cards », Cobh, Co. Cork"],
+    ["2026-09-07","Kerry / Dingle → Galway","8h00 Abbaye de Muckross\n9h30 Tenir un agneau, Dingle\n10h00 Dunquin Pier\n11h00 Conor Pass Waterfall\n12h00 Excursion bateau, Garinish/Dursey\nAirbnb « Aisling », Crosheen, Co. Galway, arrivée 17h00 (+353 85 215 6147)"],
+    ["2026-09-08","Galway","8h00 Falaises de Moher\n10h00 Château de Dunguaire\n11h30 Abbaye de Kylemore\n13h00 Eyre Square\n15h00 Quartier Latin, Galway"],
+    ["2026-09-09","Mayo → Sligo → Irlande du Nord","8h00 Statue St-Patrick & Downpatrick Head, Co. Mayo\nAirbnb « Patrick », 2 Corry St, Newtownards, arrivée 15h00 (+44 7540 461736)\n22h00 Gleniff Horseshoe, Co. Sligo"],
+    ["2026-09-10","Journée libre / retour vers Dublin","Départ Airbnb Patrick 11h00\nAucune activité listée sur TripIt — probablement route retour vers Dublin, à confirmer"],
+    ["2026-09-11","Retour","13h15 remise voiture, aéroport Dublin\n13h15 vol TS231 DUB→YYZ (arr. 15h50, conf. N5LH81)\n18h10 vol TS551 YYZ→YUL (arr. 19h30)"]
+  ];
+  return raw.map(([date,place,note],i)=>({id:'d'+i, date, place, note}));
+}
+
+function defaultChecklist(){
+  return {
+    "Documents, finances & conduite": [
+      "Passeport valide",
+      "Permis de conduire",
+      "Carte de crédit avec NIP",
+      "Euros en liquide",
+      "Preuves de réservations hors-ligne (vols, hébergements, auto)"
+    ],
+    "Électronique & auto": [
+      "Adaptateur prise Type G (UK/Irlande)",
+      "Support universel de téléphone pour voiture",
+      "Câbles USB de recharge (auto & hébergement)",
+      "Adaptateur carte SD",
+      "Batterie externe (power bank)",
+      "AirTag",
+      "Forfait itinérance / eSIM + cartes régionales hors-ligne"
+    ],
+    "Équipement randonnée": [
+      "Bottes ou souliers de randonnée imperméables",
+      "5 à 6 paires de chaussettes en laine mérinos",
+      "Pantalon de pluie / sur-pantalon imperméable",
+      "Sac à dos de jour (15-25L) avec housse de pluie",
+      "Gourde réutilisable ou poche à eau (1,5-2L)",
+      "Sacs étanches / Ziploc pour objets de valeur"
+    ],
+    "Vêtements (10 jours, multicouche)": [
+      "Manteau imperméable et coupe-vent avec capuchon",
+      "2 vestes polaires légères ou doudounes compressibles",
+      "6 à 7 t-shirts respirants (mérinos ou synthétique)",
+      "2 à 3 pantalons de marche à séchage rapide",
+      "2 pantalons de ville / confortables",
+      "Chaussures de ville / rechange décontractées",
+      "Sous-vêtements pour 10 jours",
+      "Tuque légère et tour de cou (Buff)"
+    ],
+    "Santé & trousse de soins": [
+      "Pansements pour ampoules (Compeed)",
+      "Médicaments personnels",
+      "Médicaments contre le mal des transports",
+      "Analgésiques (acétaminophène/ibuprofène) et soins digestifs",
+      "Baume à lèvres hydratant et crème pour les mains"
+    ],
+    "Extras & confort": [
+      "Serviette en microfibre à séchage rapide",
+      "Parapluie compact résistant au vent",
+      "Sac à linge sale hermétique"
+    ]
+  };
+}
+
+function loadState(){
+  try{
+    const it = localStorage.getItem(STORAGE_KEY+':itinerary');
+    state.itinerary = it ? JSON.parse(it) : defaultItinerary();
+  }catch(e){ state.itinerary = defaultItinerary(); }
+
+  try{
+    const cl = localStorage.getItem(STORAGE_KEY+':checklist-v2');
+    state.checklist = cl ? JSON.parse(cl) : defaultChecklist();
+  }catch(e){ state.checklist = defaultChecklist(); }
+
+  try{
+    const bg = localStorage.getItem(STORAGE_KEY+':budget');
+    state.budget = bg ? JSON.parse(bg) : [];
+  }catch(e){ state.budget = []; }
+
+  renderAll();
+}
+
+function saveItinerary(){
+  try{ localStorage.setItem(STORAGE_KEY+':itinerary', JSON.stringify(state.itinerary)); }catch(e){}
+}
+function saveChecklist(){
+  try{ localStorage.setItem(STORAGE_KEY+':checklist-v2', JSON.stringify(state.checklist)); }catch(e){}
+}
+function saveBudget(){
+  try{ localStorage.setItem(STORAGE_KEY+':budget', JSON.stringify(state.budget)); }catch(e){}
+}
+
+// Évite d'écrire sur le disque et de redessiner l'écran à chaque frappe :
+// on regroupe les appels pendant la saisie, ce qui rend le clavier plus fluide.
+function debounce(fn, wait){
+  let t;
+  return (...args)=>{
+    clearTimeout(t);
+    t = setTimeout(()=>fn(...args), wait);
+  };
+}
+const debouncedSaveItinerary = debounce(saveItinerary, 350);
+const debouncedRenderRoute = debounce(renderRoute, 250);
+
+function fmtDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'short'});
+}
+
+function renderCountdown(){
+  const first = state.itinerary[0];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(first.date+'T00:00:00');
+  const diff = Math.round((target - today) / 86400000);
+  const numEl = document.getElementById('countdownNum');
+  const labelEl = document.getElementById('countdownLabel');
+  if(diff > 0){
+    numEl.textContent = diff;
+    labelEl.textContent = diff === 1 ? 'jour avant le départ' : 'jours avant le départ';
+  } else if (diff === 0){
+    numEl.textContent = '🍀';
+    labelEl.textContent = "C'est aujourd'hui !";
+  } else if (diff > -10){
+    numEl.textContent = '🍀';
+    labelEl.textContent = 'En route !';
+  } else {
+    numEl.textContent = '✓';
+    labelEl.textContent = 'Voyage terminé';
+  }
+  const last = state.itinerary[state.itinerary.length-1];
+  document.getElementById('topbarDates').textContent =
+    fmtDate(first.date) + ' → ' + fmtDate(last.date);
+}
+
+function todayISO(){
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  const offsetMs = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offsetMs).toISOString().slice(0,10);
+}
+
+function renderToday(){
+  const el = document.getElementById('todaySummary');
+  if(!el) return;
+  const iso = todayISO();
+  const idx = state.itinerary.findIndex(d => d.date === iso);
+  if(idx === -1){
+    el.innerHTML = '';
+    return;
+  }
+  const day = state.itinerary[idx];
+  el.innerHTML = `
+    <div class="today-card">
+      <div class="today-head">
+        <span class="today-day">Aujourd'hui · Jour ${idx+1}</span>
+        <span class="today-place">${escapeHtml(day.place || 'Étape sans nom')}</span>
+      </div>
+      ${day.note ? `<div class="today-note">${escapeHtml(day.note)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderRoute(){
+  const el = document.getElementById('routeList');
+  el.innerHTML = state.itinerary.map(d =>
+    `<div class="route-stop"><div class="dot"></div><div class="place">${escapeHtml(d.place || 'Étape sans nom')}</div></div>`
+  ).join('');
+}
+
+function renderItinerary(){
+  const el = document.getElementById('dayList');
+  el.innerHTML = state.itinerary.map((d,i) => `
+    <div class="day-card" data-id="${d.id}">
+      <div class="day-head">
+        <span class="day-num">Jour ${i+1}</span>
+        <span class="day-date">${fmtDate(d.date)}</span>
+      </div>
+      <input class="place-input" value="${escapeAttr(d.place)}" placeholder="Nom de l'étape" data-field="place">
+      <textarea class="note-input" placeholder="Notes (hébergement, activités...)" data-field="note">${escapeHtml(d.note||'')}</textarea>
+      <button class="del-day" data-field="delete">Supprimer cette étape</button>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('.day-card').forEach(card => {
+    const id = card.dataset.id;
+    const day = state.itinerary.find(d=>d.id===id);
+    card.querySelector('[data-field="place"]').addEventListener('input', e=>{
+      day.place = e.target.value; debouncedSaveItinerary(); debouncedRenderRoute(); renderToday();
+    });
+    card.querySelector('[data-field="note"]').addEventListener('input', e=>{
+      day.note = e.target.value; debouncedSaveItinerary(); renderToday();
+    });
+    card.querySelector('[data-field="delete"]').addEventListener('click', ()=>{
+      state.itinerary = state.itinerary.filter(d=>d.id!==id);
+      saveItinerary(); renderItinerary(); renderRoute(); renderCountdown(); renderToday();
+    });
+  });
+}
+
+function renderChecklist(){
+  const el = document.getElementById('checklistArea');
+  el.innerHTML = '';
+  Object.keys(state.checklist).forEach(cat => {
+    const block = document.createElement('div');
+    block.className = 'cat-block';
+    const items = state.checklist[cat];
+    block.innerHTML = `<div class="cat-title">${escapeHtml(cat)}</div>` +
+      items.map((it,i) => `
+        <div class="item-row ${it.done?'checked':''}" data-idx="${i}">
+          <input type="checkbox" ${it.done?'checked':''}>
+          <span>${escapeHtml(it.text)}</span>
+          <button data-del="1">×</button>
+        </div>
+      `).join('') +
+      `<div class="add-row">
+        <input type="text" placeholder="Ajouter un élément..." data-newitem>
+        <button data-addbtn>Ajouter</button>
+      </div>`;
+    el.appendChild(block);
+
+    block.querySelectorAll('.item-row').forEach(row=>{
+      const idx = parseInt(row.dataset.idx);
+      row.querySelector('input[type=checkbox]').addEventListener('change', e=>{
+        items[idx].done = e.target.checked;
+        saveChecklist();
+        row.classList.toggle('checked', e.target.checked);
+      });
+      row.querySelector('[data-del]').addEventListener('click', ()=>{
+        items.splice(idx,1);
+        saveChecklist(); renderChecklist();
+      });
+    });
+    const input = block.querySelector('[data-newitem]');
+    const addBtn = block.querySelector('[data-addbtn]');
+    const addItem = ()=>{
+      const val = input.value.trim();
+      if(!val) return;
+      items.push({text:val, done:false});
+      saveChecklist(); renderChecklist();
+    };
+    addBtn.addEventListener('click', addItem);
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') addItem(); });
+  });
+}
+
+// normalize checklist items to {text, done} on first load if plain strings
+function normalizeChecklist(){
+  Object.keys(state.checklist).forEach(cat=>{
+    state.checklist[cat] = state.checklist[cat].map(it =>
+      typeof it === 'string' ? {text: it, done:false} : it
+    );
+  });
+}
+
+// Taux indicatif EUR → CAD (mise à jour ponctuelle, pas en temps réel)
+const EUR_TO_CAD = 1.61;
+
+function renderBudget(){
+  const totalEur = state.budget.reduce((s,e)=>s+Number(e.amount||0),0);
+  const totalCad = totalEur * EUR_TO_CAD;
+  document.getElementById('budgetTotal').textContent = totalEur.toLocaleString('fr-FR', {maximumFractionDigits:2}) + ' €';
+  const countText = state.budget.length
+    ? state.budget.length + (state.budget.length>1 ? ' dépenses · ' : ' dépense · ')
+    : '';
+  document.getElementById('budgetCount').textContent = state.budget.length
+    ? countText + '≈ ' + totalCad.toLocaleString('fr-FR', {maximumFractionDigits:0}) + ' $ CAD (taux ~1,61)'
+    : 'Aucune dépense pour l\'instant';
+
+  const el = document.getElementById('expenseList');
+  if(!state.budget.length){
+    el.innerHTML = '<div class="empty">Ajoute ta première dépense ci-dessus.</div>';
+    return;
+  }
+  el.innerHTML = state.budget.slice().reverse().map((e) => {
+    const realIdx = state.budget.indexOf(e);
+    const cad = Number(e.amount) * EUR_TO_CAD;
+    return `
+    <div class="expense-row" data-idx="${realIdx}">
+      <div class="left">
+        <span class="cat">${escapeHtml(e.category)}</span>
+        <span class="desc">${escapeHtml(e.desc || '—')}</span>
+      </div>
+      <div style="display:flex;align-items:center;">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;">
+          <span class="amt">${Number(e.amount).toLocaleString('fr-FR')} €</span>
+          <span style="font-size:11.5px;color:var(--stone);">≈ ${cad.toLocaleString('fr-FR',{maximumFractionDigits:0})} $ CAD</span>
+        </div>
+        <button data-del>×</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.expense-row').forEach(row=>{
+    row.querySelector('[data-del]').addEventListener('click', ()=>{
+      const idx = parseInt(row.dataset.idx);
+      state.budget.splice(idx,1);
+      saveBudget(); renderBudget();
+    });
+  });
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+function renderAll(){
+  normalizeChecklist();
+  renderCountdown();
+  renderToday();
+  renderRoute();
+  renderItinerary();
+  renderChecklist();
+  renderBudget();
+}
+
+// Nav
+document.querySelectorAll('.navbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Add day
+document.getElementById('addDayBtn').addEventListener('click', ()=>{
+  const last = state.itinerary[state.itinerary.length-1];
+  const d = last ? new Date(last.date+'T00:00:00') : new Date(2026,8,2);
+  d.setDate(d.getDate()+1);
+  state.itinerary.push({
+    id: 'd'+Date.now(),
+    date: d.toISOString().slice(0,10),
+    place: '',
+    note: ''
+  });
+  saveItinerary(); renderItinerary(); renderRoute(); renderCountdown(); renderToday();
+});
+
+// Add expense
+document.getElementById('addExpBtn').addEventListener('click', ()=>{
+  const cat = document.getElementById('expCat').value;
+  const desc = document.getElementById('expDesc').value.trim();
+  const amt = parseFloat(document.getElementById('expAmt').value);
+  if(!amt || amt <= 0) return;
+  state.budget.push({category:cat, desc:desc, amount:amt});
+  document.getElementById('expDesc').value='';
+  document.getElementById('expAmt').value='';
+  saveBudget(); renderBudget();
+});
+
+loadState();
+</script>
+</body>
+</html>
